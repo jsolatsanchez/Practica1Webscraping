@@ -72,6 +72,7 @@ class datosMacroScraper():
                     print ("_____")
                     obtenirCapcalera = False
                     # Comentar el break si es volen extreure les dades, i no només la capçalera (fa que es surti de la iteració de països
+                    self.__getDades(bs)
                     break
                 # Obté les dades (aquesta vegada de cada país, d'una temàtica concreta)
                 self.__getDades(bs)
@@ -79,7 +80,9 @@ class datosMacroScraper():
 
     # Obté les dades d'una URL a un recurs amb taula de dades desglossades per països
     def __getDades(self, bs):
-        print(bs.title.string)
+        # Obté el país actual
+        pais = bs.title.string.split('-', 1)[0]
+        print(pais)
 
 
     # Obté la capçalera de cada taula
