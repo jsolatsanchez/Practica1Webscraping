@@ -7,7 +7,7 @@ class datosMacroScraper():
     def __init__(self) -> None:
         self.url = "https://datosmacro.expansion.com"
         self.context = "/demografia"
-        self.data = []
+        self.data = ['País']
 
     def __download_html(self, url):
         response = requests.get(url)
@@ -21,7 +21,7 @@ class datosMacroScraper():
         links_tematics = []
         n = 0
         for div in div_items:
-            if n < 6:
+            if n < 3:   # Limita el número d'elements a descarregar (eliminar al final)
                 # l'element <div> conté un <a>?
                 a = div.next_element.next_element
                 if a.name == 'a':
@@ -45,6 +45,8 @@ class datosMacroScraper():
     def __get_item_links(self, links):
         noms_estadistiques = []
         links_estadistiqus = []
+
+        # Recorre les pàgines de cada temàtica per obtenir-ne les dades
         for e in links:
             html = self.__download_html(e)
             bs = BeautifulSoup(html, 'html.parser')
@@ -58,16 +60,21 @@ class datosMacroScraper():
             # Obté els enllaços a les respectives pàgines de cada país
             links_estadistiques = taula_element.find_all("a")
 
-            n = 0
+            # Obté la informació de cada país d'una temàtica concreta.
+            obtenirCapcalera = True
             for l in links_estadistiques:
                 html = self.__download_html(self.url + l["href"])
                 bs = BeautifulSoup(html, 'html.parser')
-                self.__getDades(bs)
-                if n == 0:
+                # Obté la capçalera (només per al primer país accedit d'una temàtica concreta)
+                if obtenirCapcalera:
                     print ("Capçalera...")
                     self.__getCapcalera(bs)
                     print ("_____")
-                n = n + 1
+                    obtenirCapcalera = False
+                    # Comentar el break si es volen extreure les dades, i no només la capçalera (fa que es surti de la iteració de països
+                    break
+                # Obté les dades (aquesta vegada de cada país, d'una temàtica concreta)
+                self.__getDades(bs)
         return
 
     # Obté les dades d'una URL a un recurs amb taula de dades desglossades per països
@@ -80,8 +87,15 @@ class datosMacroScraper():
         taula_elements = bs.find("tr", {"class": "tableheader"})
         ths = taula_elements.find_all("th")
         for th in ths:
-            print(th.getText())
- 
+            nomColumna = th.getText()
+            try:
+                posicio = self.data.index(nomColumna)
+            except ValueError:
+                # Si la columna no existeix, l'afegeix
+                self.data += [nomColumna]
+                posicio = -1
+            print(nomColumna + ": " + str(posicio))
+
  
     def scrape(self):
         print ("Web scraping de Datos Macro")
@@ -93,3 +107,4 @@ class datosMacroScraper():
         #titols = self.__get_item_names(info_links)
         links_detall = self.__get_item_links(info_links)
         print(links_detall)
+        print(self.data)
