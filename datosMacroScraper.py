@@ -1,6 +1,7 @@
 from turtle import ht
 import requests
 from bs4 import BeautifulSoup
+import numpy as np
 
 class datosMacroScraper():
 
@@ -8,6 +9,7 @@ class datosMacroScraper():
         self.url = "https://datosmacro.expansion.com"
         self.context = "/demografia"
         self.data = ['País']
+        self.dades = np.empty(0)
 
     def __download_html(self, url):
         response = requests.get(url)
@@ -21,7 +23,7 @@ class datosMacroScraper():
         links_tematics = []
         n = 0
         for div in div_items:
-            if n < 3:   # Limita el número d'elements a descarregar (eliminar al final)
+            if n < 2:   # Limita el número d'elements a descarregar (eliminar al final)
                 # l'element <div> conté un <a>?
                 a = div.next_element.next_element
                 if a.name == 'a':
@@ -72,8 +74,8 @@ class datosMacroScraper():
                     print ("_____")
                     obtenirCapcalera = False
                     # Comentar el break si es volen extreure les dades, i no només la capçalera (fa que es surti de la iteració de països
-                    self.__getDades(bs)
-                    break
+                    # self.__getDades(bs)
+                    # break
                 # Obté les dades (aquesta vegada de cada país, d'una temàtica concreta)
                 self.__getDades(bs)
         return
@@ -83,6 +85,18 @@ class datosMacroScraper():
         # Obté el país actual
         pais = bs.title.string.split('-', 1)[0]
         print(pais)
+        taula = bs.find("tbody")
+        entrades = taula.find_all("tr")
+        fila = [pais]
+        print(fila)
+        for entrada in entrades:
+            camps = entrada.find_all("td")
+            for camp in camps:
+                fila += [camp.getText()]
+            print(fila)
+            self.dades = np.append(self.dades, fila)
+            print(self.dades)
+            fila = [pais]
 
 
     # Obté la capçalera de cada taula
@@ -96,9 +110,10 @@ class datosMacroScraper():
             except ValueError:
                 # Si la columna no existeix, l'afegeix
                 self.data += [nomColumna]
+                self.dades 
                 posicio = -1
             print(nomColumna + ": " + str(posicio))
-
+        self.dades = np.append (self.dades, [self.data])
  
     def scrape(self):
         print ("Web scraping de Datos Macro")
@@ -111,3 +126,4 @@ class datosMacroScraper():
         links_detall = self.__get_item_links(info_links)
         print(links_detall)
         print(self.data)
+        print(self.dades)
