@@ -34,6 +34,7 @@ class datosMacroScraper():
             n = n + 1
         return links_tematics
 
+    # Es va definir la funció get_item_names per obtenir els noms de les estadístiques, ara no s'empra.
     def __get_item_names(self, links):
         links_secundaris = []
         for e in links:
@@ -67,7 +68,7 @@ class datosMacroScraper():
             # Obté la informació de cada país d'una temàtica concreta.
             obtenirCapcalera = True
             num_iteracions = 0
-            max_iteracions = 3 # Limita el número de països
+            max_iteracions = 20 # Limita el número de països
             for l in links_estadistiques:
                 html = self.__download_html(self.url + l["href"])
                 bs = BeautifulSoup(html, 'html.parser')
@@ -104,7 +105,6 @@ class datosMacroScraper():
             self.data.append(fila)
             fila = [pais]
 
-
     # Obté la capçalera de cada taula
     def __getCapcalera(self, bs):
         taula_elements = bs.find("tr", {"class": "tableheader"})
@@ -116,17 +116,16 @@ class datosMacroScraper():
             except ValueError:
                 # Si la columna no existeix, l'afegeix
                 self.header += [nomColumna]
-                self.dades 
                 posicio = -1
             print(nomColumna + ": " + str(posicio))
         self.dades = np.append (self.dades, [self.header])
+        print("Caçalera: " + str(self.header))
  
     def __persistir(self):
         dataset = pd.DataFrame(self.data)
+        dataset.columns = self.header
         dataset.sample(3)
-
         dataset.to_csv("dades_macro.csv", index = False)
-
 
     def scrape(self):
         print ("Web scraping de Datos Macro")
