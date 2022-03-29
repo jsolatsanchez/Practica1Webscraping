@@ -91,7 +91,7 @@ class datosMacroScraper():
     # Obté les dades d'una URL a un recurs amb taula de dades desglossades per països
     def __getDades(self, bs):
         # Obté el país actual
-        pais = bs.title.string.split('-', 1)[0]
+        pais = bs.title.string.split(' - ', 1)[0]
         print(pais)
         taula = bs.find("tbody")
         entrades = taula.find_all("tr")
@@ -99,7 +99,7 @@ class datosMacroScraper():
         for entrada in entrades:
             camps = entrada.find_all("td")
             for camp in camps:
-                fila += [camp.getText()]
+                fila += [camp.getText().replace("º", "")]
             print(fila)
             self.dades = np.append(self.dades, fila)
             self.data.append(fila)
