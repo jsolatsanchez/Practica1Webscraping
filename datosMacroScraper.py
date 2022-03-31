@@ -27,6 +27,7 @@ class datosMacroScraper():
         links_tematics = []
         n = 0
         for div in div_items:
+
             if n < 3:   # Limita el número d'elements a descarregar (eliminar al final)
                 # l'element <div> conté un <a>?
                 a = div.next_element.next_element
@@ -53,6 +54,7 @@ class datosMacroScraper():
         noms_estadistiques = []
         links_estadistiques = []
         links_num = 0
+
 
         # Recorre les pàgines de cada temàtica per obtenir-ne les dades
         for e in links:
