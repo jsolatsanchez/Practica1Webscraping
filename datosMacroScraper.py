@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
 class datosMacroScraper():
 
@@ -12,6 +13,7 @@ class datosMacroScraper():
         self.data = []
         self.header = ['País']
         self.dades = np.empty(0)
+        self.dataset = None
 
     def __download_html(self, url):
         response = requests.get(url)
@@ -25,7 +27,8 @@ class datosMacroScraper():
         links_tematics = []
         n = 0
         for div in div_items:
-            if n < 2:   # Limita el número d'elements a descarregar (eliminar al final)
+
+            if n < 3:   # Limita el número d'elements a descarregar (eliminar al final)
                 # l'element <div> conté un <a>?
                 a = div.next_element.next_element
                 if a.name == 'a':
@@ -49,7 +52,9 @@ class datosMacroScraper():
     # A partir d'una llista de pàgines temàtiques obté les estadístiques de tots els països
     def __get_item_links(self, links):
         noms_estadistiques = []
-        links_estadistiqus = []
+        links_estadistiques = []
+        links_num = 0
+
 
         # Recorre les pàgines de cada temàtica per obtenir-ne les dades
         for e in links:
@@ -86,6 +91,24 @@ class datosMacroScraper():
                 num_iteracions = num_iteracions + 1
                 if num_iteracions == max_iteracions:
                     break
+            
+            # Actualitzar el contador de links
+            links_num += 1
+            # Si és la primera característica carregada, es crea el datafreame de nou,
+            # si no, es fa una join per país i data
+            if links_num == 1:
+                self.dataset = pd.DataFrame(self.data)
+                self.dataset.columns = self.header
+                # Resetegem la capçalera i les dades de l'array
+                self.header = ['País']
+                self.data = []
+            else:
+                aux_dataset = pd.DataFrame(self.data)
+                aux_dataset.columns = self.header
+                self.dataset = pd.merge(self.dataset,aux_dataset,on=['País','Fecha'],how='outer')
+                # Resetegem la capçalera i les dades de l'array
+                self.header = ['País']
+                self.data = []
         return
 
     # Obté les dades d'una URL a un recurs amb taula de dades desglossades per països
@@ -99,7 +122,12 @@ class datosMacroScraper():
         for entrada in entrades:
             camps = entrada.find_all("td")
             for camp in camps:
-                fila += [camp.getText().replace("º", "")]
+                if camp['class'][0]=='fecha':
+                    fila += [datetime.strptime(str(camp['data-value']),'%Y-%m-%d')]
+                elif camp['class'][0]=='numero':
+                    fila += [camp['data-value']]
+                else:
+                    fila += [camp.getText().replace("º", "")]
             print(fila)
             self.dades = np.append(self.dades, fila)
             self.data.append(fila)
@@ -122,10 +150,13 @@ class datosMacroScraper():
         print("Caçalera: " + str(self.header))
  
     def __persistir(self):
-        dataset = pd.DataFrame(self.data)
-        dataset.columns = self.header
-        dataset.sample(3)
-        dataset.to_csv("dades_macro.csv", index = False)
+        #dataset = pd.DataFrame(self.data)
+        #dataset.columns = self.header
+        #dataset.sample(3)
+        # Passem les dates a text
+        self.dataset['Fecha'] = self.dataset['Fecha'].apply(lambda x: x.strftime('%m-%Y'))
+        # Escriptura a un csv
+        self.dataset.to_csv("dades_macro.csv", index = False)
 
     def scrape(self):
         print ("Web scraping de Datos Macro")
