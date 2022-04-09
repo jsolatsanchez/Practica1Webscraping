@@ -1,4 +1,3 @@
-from turtle import ht
 import requests
 from bs4 import BeautifulSoup
 import numpy as np
@@ -16,7 +15,7 @@ class datosMacroScraper():
         self.dataset = None
 
     def __download_html(self, url):
-        response = requests.get(url)
+        response = requests.get(url, timeout=None)
         return response.text
     
     # Retorna el conjunt d'enllaços de cadascuna de les pàgines temàtiques
@@ -25,17 +24,14 @@ class datosMacroScraper():
         # Els enllaços estan inclosos dins div de tipus row: <div> <h2> <a>
         div_items = bs.findAll("div", {"class": "row"} )
         links_tematics = []
-        n = 0
         for div in div_items:
+            # l'element <div> conté un <a>?
+            a = div.next_element.next_element
+            if a.name == 'a':
+                href = a['href']
+                links_tematics.append(self.url + href)
 
-            if n < 3:   # Limita el número d'elements a descarregar (eliminar al final)
-                # l'element <div> conté un <a>?
-                a = div.next_element.next_element
-                if a.name == 'a':
-                    href = a['href']
-                    links_tematics.append(self.url + href)
-            n = n + 1
-        return links_tematics
+        return links_tematics[0:-1]# S'exclou l'apartat de religions
 
     # Es va definir la funció get_item_names per obtenir els noms de les estadístiques, ara no s'empra.
     def __get_item_names(self, links):
@@ -51,10 +47,8 @@ class datosMacroScraper():
 
     # A partir d'una llista de pàgines temàtiques obté les estadístiques de tots els països
     def __get_item_links(self, links):
-        noms_estadistiques = []
         links_estadistiques = []
         links_num = 0
-
 
         # Recorre les pàgines de cada temàtica per obtenir-ne les dades
         for e in links:
@@ -72,8 +66,6 @@ class datosMacroScraper():
 
             # Obté la informació de cada país d'una temàtica concreta.
             obtenirCapcalera = True
-            num_iteracions = 0
-            max_iteracions = 20 # Limita el número de països
             for l in links_estadistiques:
                 html = self.__download_html(self.url + l["href"])
                 bs = BeautifulSoup(html, 'html.parser')
@@ -88,9 +80,6 @@ class datosMacroScraper():
                     # break
                 # Obté les dades (aquesta vegada de cada país, d'una temàtica concreta)
                 self.__getDades(bs)
-                num_iteracions = num_iteracions + 1
-                if num_iteracions == max_iteracions:
-                    break
             
             # Actualitzar el contador de links
             links_num += 1
@@ -128,7 +117,6 @@ class datosMacroScraper():
                     fila += [camp['data-value']]
                 else:
                     fila += [camp.getText().replace("º", "")]
-            print(fila)
             self.dades = np.append(self.dades, fila)
             self.data.append(fila)
             fila = [pais]
@@ -140,7 +128,9 @@ class datosMacroScraper():
         for th in ths:
             nomColumna = th.getText()
             try:
+                # Si el nom de columna ja existeix, es fa un duplicat
                 posicio = self.header.index(nomColumna)
+                self.header += [nomColumna+'_'+str(posicio)]
             except ValueError:
                 # Si la columna no existeix, l'afegeix
                 self.header += [nomColumna]
@@ -150,9 +140,7 @@ class datosMacroScraper():
         print("Caçalera: " + str(self.header))
  
     def __persistir(self):
-        #dataset = pd.DataFrame(self.data)
-        #dataset.columns = self.header
-        #dataset.sample(3)
+        print('Guardant dades a un fitxer csv...')
         # Passem les dates a text
         self.dataset['Fecha'] = self.dataset['Fecha'].apply(lambda x: x.strftime('%m-%Y'))
         # Escriptura a un csv
@@ -167,7 +155,4 @@ class datosMacroScraper():
         print(info_links)
         #titols = self.__get_item_names(info_links)
         links_detall = self.__get_item_links(info_links)
-        print(links_detall)
-        print(self.header)
-        print(self.data)
         self.__persistir()
