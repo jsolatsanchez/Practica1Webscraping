@@ -1,9 +1,9 @@
-# Practica1Webscraping
+# Practica1. Webscraping
 
 ## Components del grup
 
-Antoni Sanchez Magraner
-Joan Solà Porta
+* Antoni Sanchez Magraner
+* Joan Solà Porta
 
 ## Descripció dels fitxers
 
@@ -13,5 +13,5 @@ El projecte conté els següents fitxers:
 * datosMacroScraper.py: Codi secundari on s'emmagatzemen les funcions a utilitzar en el codi principal.
 * dades_macro.csv: Fitxer amb les dades extretes.
 
-## DOI de Zeondo del dataset generat
-
+## DOI de Zenodo del dataset generat
+* 10.5281/zenodo.6426889
