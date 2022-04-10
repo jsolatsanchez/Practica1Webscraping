@@ -2,7 +2,7 @@
 
 ## Components del grup
 
-* Antoni Sanchez Magraner
+* Antoni Sànchez Magraner
 * Joan Solà Porta
 
 ## Descripció dels fitxers

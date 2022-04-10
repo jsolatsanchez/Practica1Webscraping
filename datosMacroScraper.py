@@ -153,6 +153,7 @@ class datosMacroScraper():
         html = self.__download_html(self.url + self.context)
         info_links = self.__get_links_tematics(html)
         print(info_links)
-        #titols = self.__get_item_names(info_links)
+        # Obté les dades de cadascun dels enllaços dels indicadors
         links_detall = self.__get_item_links(info_links)
+        # Enregistra les dades obtingudes a un fitxer de text CSV
         self.__persistir()
